@@ -22,11 +22,13 @@ This toolkit works with both. Here's the difference:
 
 ---
 
-Open Claude Code in an empty project folder and paste this prompt:
+Create an empty folder, open Claude Code in it, and paste this prompt (adjust the path to where you cloned the toolkit):
 
 ```
-Read the SKILL.md file from /home/jaht.linux/dev/git/ttc-dev-infra-toolkit and follow it to set up this project.
+Read the SKILL.md file from <TOOLKIT_PATH> and follow it to set up this project.
 ```
+
+Replace `<TOOLKIT_PATH>` with the path to your local clone, e.g. `~/dev/git/ttc-dev-infra-toolkit`.
 
 Claude will ask you:
 - Workload name
@@ -37,13 +39,13 @@ Then it will scaffold the full Terraform structure and create project-level Clau
 
 ## Onboard an existing project
 
-Open Claude Code in an existing Terraform repo and paste this prompt:
+Open Claude Code in an existing Terraform repo and paste this prompt (adjust the path to where you cloned the toolkit):
 
 ```
-Read the SKILL.md file from /home/jaht.linux/dev/git/ttc-dev-infra-toolkit and onboard this existing Terraform project.
+Read the SKILL.md file from <TOOLKIT_PATH> and onboard this existing Terraform project.
 ```
 
-Claude will read your existing code and add `AGENTS.md`, `.claude/CLAUDE.md`, and `.mcp.json` without touching your Terraform files.
+Claude will read your existing code and add `AGENTS.md` and `.claude/CLAUDE.md` without touching your Terraform files.
 
 ---
 
@@ -52,13 +54,21 @@ Claude will read your existing code and add `AGENTS.md`, `.claude/CLAUDE.md`, an
 Run this once to install the global agents and commands into Claude Code:
 
 ```bash
-# Clone or locate the toolkit
-cd /home/jaht.linux/dev/git/ttc-dev-infra-toolkit
+# Clone the toolkit
+git clone <repo-url> ~/ttc-dev-infra-toolkit
+cd ~/ttc-dev-infra-toolkit
 
-# Symlink into ~/.claude (already done if you set this up with Claude)
-ln -s $(pwd)/CLAUDE.md ~/.claude/CLAUDE.md
-ln -s $(pwd)/agents ~/.claude/agents
-ln -s $(pwd)/commands ~/.claude/commands
+# Install (symlinks into ~/.claude)
+./install.sh
+```
+
+Or manually:
+
+```bash
+TOOLKIT=$(pwd)
+ln -sf "$TOOLKIT/CLAUDE.md" ~/.claude/CLAUDE.md
+ln -sf "$TOOLKIT/agents"   ~/.claude/agents
+ln -sf "$TOOLKIT/commands" ~/.claude/commands
 ```
 
 ---
@@ -82,14 +92,7 @@ ln -s $(pwd)/commands ~/.claude/commands
 |---|---|
 | `networking` | Hub-spoke VNet, subnets, NSG, peering |
 | `data-platform` | Storage Account, SQL Server, Cosmos DB, Key Vault |
-
-### MCP Servers (`mcp/`)
-| Server | Description | Requires |
-|---|---|---|
-| `azure` | Query live Azure resources directly from Claude | Node.js, `az login` |
-| `terraform` | Real-time azurerm provider docs + Terraform Registry access | Docker |
-
-Config is created as `.mcp.json` in the project root during setup.
+| `caf-compliance` | CAF management group hierarchy + security policy baseline |
 
 ---
 
@@ -128,10 +131,4 @@ ttc-dev-infra-toolkit/
     networking.md           → Hub-spoke VNet, subnets, NSG
     data-platform.md        → Storage, SQL, Cosmos, Key Vault
 
-  mcp/
-    azure.md                → Live Azure resource queries
-    terraform.md            → Real-time azurerm docs + Registry
-
-  examples/configured-project/
-    AGENTS.md, .claude/, .mcp.json, environments/dev/, modules/
 ```

@@ -11,7 +11,7 @@ terraform {
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = "~> 3.100"
+      version = "~> 4.0"
     }
   }
 }
@@ -239,6 +239,11 @@ resource "azurerm_key_vault" "this" {
   purge_protection_enabled    = true
   public_network_access_enabled = var.environment == "prd" ? false : true
   enable_rbac_authorization   = true
+
+  network_acls {
+    default_action = "Deny"
+    bypass         = "AzureServices"
+  }
 
   tags = local.common_tags
 

@@ -49,6 +49,19 @@ When the user describes a requirement, you must:
 
 ### Security
 - Managed Identity over connection strings/passwords
-- Key Vault for all secrets — use access policies or RBAC
+- Key Vault for all secrets — always use RBAC (not legacy access policies), disable public access, add `network_acls` Deny block
 - Defender for Cloud for threat detection
 - Private endpoints > service endpoints > public access
+
+### CI/CD Identity (GitHub Actions)
+- Use OIDC federated credentials — never store service principal keys in secrets
+- One identity per repo+environment (environment-based) or per repo+branch (branch-based)
+- Role assignment: Contributor on target subscription scope
+- GitHub Actions env vars: `ARM_USE_OIDC=true`, `ARM_CLIENT_ID`, `ARM_TENANT_ID`, `ARM_SUBSCRIPTION_ID`
+
+### Multi-Subscription (Hub-Spoke)
+- Hub lives in a dedicated connectivity subscription
+- Each spoke environment gets its own subscription
+- Use provider aliases (`azurerm.hub`, `azurerm.dev`, etc.) — pass via `providers = { azurerm = azurerm.dev }` in module calls
+- Spoke peering requires `use_remote_gateways = true` when hub has a VPN/ExpressRoute gateway
+- Use `terraform_data` resource to enforce VPN gateway creation before spoke peering

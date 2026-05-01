@@ -22,6 +22,7 @@ Ask the user:
    - Networking (VNet, subnets, NSG, hub-spoke peering)
    - Data (Storage Account, SQL, Cosmos DB)
    - Security (Key Vault, private endpoints)
+   - CAF Compliance (management group hierarchy + policy baseline — separate root module)
 4. **Region** — primary Azure region (default: West Europe)
 
 ## Step 3: Apply the correct preset
@@ -96,8 +97,10 @@ Keys: {workload}-{env}.terraform.tfstate
 #!/bin/bash
 # Check if edited file is a .tf file and warn if terraform fmt would change it
 if echo "$CLAUDE_TOOL_INPUT" | grep -q '\.tf"'; then
-  if command -v terraform &>/dev/null; then
-    terraform fmt -check -recursive . 2>/dev/null && echo "✓ Terraform format OK" || echo "⚠ Run 'terraform fmt' to fix formatting"
+  if command -v tofu &>/dev/null; then
+    tofu fmt -check -recursive . 2>/dev/null && echo "✓ Format OK" || echo "⚠ Run 'tofu fmt' to fix formatting"
+  elif command -v terraform &>/dev/null; then
+    terraform fmt -check -recursive . 2>/dev/null && echo "✓ Format OK" || echo "⚠ Run 'terraform fmt' to fix formatting"
   fi
 fi
 ```
@@ -131,30 +134,7 @@ This project uses the ttc-dev-infra-toolkit for Azure infrastructure with Terraf
 - Before committing Terraform changes → @terraform-reviewer
 ```
 
-## Step 7: Create MCP config
-
-Create `.mcp.json` in the project root to enable both MCP servers:
-
-```json
-{
-  "mcpServers": {
-    "azure": {
-      "command": "npx",
-      "args": ["-y", "@azure/mcp@latest", "server", "start"]
-    },
-    "terraform": {
-      "command": "docker",
-      "args": ["run", "-i", "--rm", "hashicorp/terraform-mcp-server"]
-    }
-  }
-}
-```
-
-Tell the user:
-- **azure**: Requires `az login` and Node.js — lets Claude query live Azure resources directly
-- **terraform**: Requires Docker — gives Claude real-time azurerm provider docs and Terraform Registry access (no account needed)
-
-## Step 8: Summary
+## Step 7: Summary
 
 When done, show the user:
 1. The created file structure (tree view)
@@ -164,7 +144,9 @@ When done, show the user:
    - Create state storage account if it doesn't exist
    - Run `terraform init` in each environment folder
    - Review `terraform.tfvars` and fill in values
-   - Restart Claude Code session to activate the MCP servers (azure + terraform)
+   - Run `terraform validate` to check for errors
+   - Run `terraform fmt -recursive` to fix formatting
+   - Run `terraform plan` to preview changes before applying
 
 ---
 
@@ -226,34 +208,19 @@ This project uses the ttc-dev-infra-toolkit for Azure infrastructure with Terraf
 - Before committing Terraform changes → @terraform-reviewer
 ```
 
-## Step 4: Create `.mcp.json`
-
-```json
-{
-  "mcpServers": {
-    "azure": {
-      "command": "npx",
-      "args": ["-y", "@azure/mcp@latest", "server", "start"]
-    },
-    "terraform": {
-      "command": "docker",
-      "args": ["run", "-i", "--rm", "hashicorp/terraform-mcp-server"]
-    }
-  }
-}
-```
-
-## Step 5: Create `.claude/ttc-dev-infra-toolkit-version`
+## Step 4: Create `.claude/ttc-dev-infra-toolkit-version`
 
 ```
 {VERSION}
 ```
 
-## Step 6: Summary
+## Step 5: Summary
 
 Show the user:
 1. What you found in the existing project (modules, environments, resources)
 2. The files you created
 3. Optional next steps:
    - Run `@terraform-reviewer` to review existing code for issues
-   - Run `az login` and restart Claude Code to activate MCP servers
+   - Run `terraform validate` to check for errors
+   - Run `terraform fmt -recursive` to fix formatting
+   - Run `terraform plan` to preview changes before applying
